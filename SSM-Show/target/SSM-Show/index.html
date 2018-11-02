@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SSM集成数据展示</title>
+    <style>
+        #table{
+            border-collapse: collapse;
+            width: 100%;
+            text-align: center;
+        }
+        #table th,#table td{
+            padding: 5px;
+        }
+        #tbody img{
+            width: 40px;
+            height: 30px;
+        }
+        #tbody a{
+            cursor: pointer;
+            color: #009688;
+        }
+        #tbody tr:hover{
+            background: #2D93CA;
+            color: white;
+            cursor: pointer;
+        }
+        #test10 img {
+            width: 100%;
+            height: 100%;
+        }
+        #control button, #control input[type='file']{
+            padding: 5px;
+            margin-left: 10px;
+            margin-top: 10px;
+        }
+    </style>
+    <link rel="shortcut icon" href="//www.suning.com/favicon.ico" type="image/x-icon">
+    <link href="js/layui/css/layui.css" rel="stylesheet" type="text/css">
+</head>
+<body>
+<marquee><h2 style="color:orange">SSM集成综合示例</h2></marquee>
+<table id="table" border="1"><caption><h2>SSM集成综合示例</h2></caption>
+      <thead>
+        <tr>
+            <th>多选</th>
+            <th>商品编号</th>
+            <th>商品名称</th>
+            <th>商品价格</th>
+            <th>商品图片</th>
+            <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+  </table>
+<div id="demo2-1"></div>
+<br/>
+<center>
+    <label for="gid">商品编号:</label><input id="gid" type="text" readonly><br/>
+    <label for="gname">商品名称:</label><input id="gname" type="text" ><br/>
+    <label for="gprice">商品价格:</label><input id="gprice" type="number" ><br/>
+    <p>
+        <label for="test10">图片：</label>
+        <div class="layui-upload-drag" id="test10">
+            <i class="layui-icon"></i>
+    <p>点击上传，或将文件拖拽到此处</p>
+    </div>
+    </p>
+
+
+    <div id="control">
+        <button id="btnUpdate">修改数据</button><button id="btnAdd">新增数据</button><button id="deleteAll">批量删除</button><br/>
+        <button id="exportExcel">导出Excel数据</button><button id="exportCSV">导出CSV数据</button>
+        <form action="excelController/importExcels" method="post" enctype="multipart/form-data">
+            <input type="file" name="files"/>
+            <button>导入Excel</button>
+        </form>
+    </div>
+</center>
+</body>
+<script src="js/layui/layui.js"></script>
+<script src="js/jquery-1.11.3.js"></script>
+<script>
+    $(function () {
+        var gpicture="";
+        /*
+         * 文件上传
+         * */
+        layui.use('upload', function() {
+            var $ = layui.jquery
+                , upload = layui.upload;
+            upload.render({
+                elem: '#test10'
+                ,url: 'goodsController/fileSave'
+                ,method:'post'
+                ,done: function(res){
+                    $("#test10").css("backgroundImage","url(image/"+res.data+")");
+                    gpicture=res.data;
+                }
+            });
+        });
+
+        /*封装一个app对象*/
+        var app={
+            /*
+            * 初次请求加载数据
+            * */
+            firstRequest(){
+                $.post("goodsController/getAllGoodsCount",{},function (sum) {
+
+                    //分页
+                    layui.use(['laypage', 'layer'], function() {
+                        var laypage = layui.laypage
+                            , layer = layui.layer;
+                        //总页数大于页码总数
+                        laypage.render({
+                            elem: 'demo2-1'
+                            ,limit:4
+                            , count: sum //数据总数
+                            //当前页
+                            ,curr: location.hash.replace('#!fenye=', '') //获取起始页
+                            ,hash: 'fenye' //自定义hash值
+                            , jump: function (obj) {
+                                /*一个数组传两个参数*/
+                                var intList=[];
+                                intList.push(obj.curr);
+                                intList.push(obj.limit);
+
+                                //请求数据
+                                $.ajax({
+                                    url:"goodsController/queryAllGoodsByPage",
+                                    type:"POST",
+                                    contentType:"application/json;charset=utf-8",
+                                    data:JSON.stringify(intList),
+                                    success:function (jsdata) {
+                                        app.showData(jsdata);
+                                    }
+                                })
+                            }
+                        });
+                    })
+                })
+            }
+
+            /*
+            * 渲染数据
+            * */
+            ,showData(data){
+                console.log(data);
+                $("#tbody tr").remove();
+                $.each(data,function (index,obj) {
+                    var tr=$("<tr/>");
+                    var cheDel=$("<input type='checkbox' name='cheDel' class='cheDel'>").data("id",obj.id);
+                    $("<td/>").append(cheDel).appendTo(tr);
+                    $("<td/>").html(obj.id).appendTo(tr);
+                    $("<td/>").html(obj.gname).appendTo(tr);
+                    $("<td/>").html(obj.price).appendTo(tr);
+                    $("<td/>").append("<img src='image/"+obj.picture+"'/>").appendTo(tr);
+                    var edit=$("<a class='edit'>编辑</a>").data("obj",obj);
+                    var del=$("<a class='del'>删除</a>").data("id",obj.id);
+                    $("<td/>").append(edit).append("  |  ").append(del).appendTo(tr);
+                    $("#tbody").append(tr);
+                })
+            }
+
+            /*
+            * 删除一条
+            * */
+            ,deleteData(){
+                var id=$(this).data("id");
+                console.log(id);
+                $.ajax({
+                    url:"goodsController/delete",
+                    type:"post",
+                    contentType:"application/json;charset=utf-8",
+                    data:JSON.stringify(id),
+                    beforeSend(){
+                        if(!confirm("是否确定删除?")){
+                            return false;
+                        }
+                    },
+                    success:function () {
+                        app.firstRequest();
+                    }
+                })
+            }
+
+            /*
+            * 批量删除
+            * */
+            ,deleteAll(){
+                var items=new Array();
+                $("#tbody .cheDel").each(function () {
+                    if($(this).prop("checked")){
+                        items.push($(this).data("id"));
+                    }
+                });
+                $.ajax({
+                    url:"goodsController/deleteAll",
+                    type:"post",
+                    contentType:"application/json;charset=utf-8",
+                    data:JSON.stringify(items),
+                    beforeSend:function () {
+                        if(confirm("确定批量删除操作?")) {
+                            if (items.length == 0) {
+                                alert("还未选择要删除的数据.");
+                                return false;
+                            }
+                        }else
+                            return false;
+                    },
+                    success:function () {
+                        app.firstRequest();
+                    }
+                })
+            }
+
+            /*
+            * 获得要修改的数据
+            * */
+            ,getUpdateData(){
+                var obj=$(this).data("obj");
+                $("#gid").val(obj.id);
+                $("#gname").val(obj.gname);
+                $("#gprice").val(obj.price);
+                $("#test10").css("backgroundImage","url(image/"+obj.picture+")");
+                /*保存修改图片路径，方式修改图片时为空*/
+                gpicture=obj.picture;
+            }
+
+            /*
+            * 执行修改
+            * */
+            ,update(){
+                var goods={
+                    "id":$("#gid").val(),
+                    "gname":$("#gname").val(),
+                    "price":$("#gprice").val(),
+                    "picture":gpicture,
+                };
+                $.ajax({
+                    url:"goodsController/update",
+                    type:"post",
+                    contentType:"application/json;charset=utf-8",
+                    data:JSON.stringify(goods),
+                    beforeSend:function(){
+                        console.log(goods)
+                    },
+                    success:function () {
+                        /*
+                        * 清空文本框数据
+                        * */
+                        $("#gid").val("");
+                        $("#gname").val("");
+                        $("#gprice").val("");
+                        app.firstRequest();
+                    }
+                })
+            }
+
+            /*
+            * 新增一条数据
+            * */
+            ,insert(){
+                var goods={
+                    "gname":$("#gname").val(),
+                    "price":$("#gprice").val(),
+                    "picture":gpicture
+                };
+                $.ajax({
+                    url:"goodsController/insert",
+                    type:"post",
+                    contentType:"application/json;charset=utf-8",
+                    data:JSON.stringify(goods),
+                    beforeSend:function(){
+                        console.log(goods)
+                    },
+                    success:function () {
+                        /*
+                        * 清空文本框数据
+                        * */
+                        $("#gid").val("");
+                        $("#gname").val("");
+                        $("#gprice").val("");
+                        app.firstRequest();
+                    }
+                })
+            }
+
+            /*
+            * 对外接口
+            * */
+            ,init(){
+                app.firstRequest();
+                $("#tbody").on("click",".del",app.deleteData);
+                $("#tbody").on("click",".edit",app.getUpdateData);
+                $("#btnAdd").click(app.insert);
+                $("#btnUpdate").click(app.update);
+                $("#deleteAll").click(app.deleteAll);
+
+                /*导出Excel*/
+                $("#exportExcel").click(function () {
+                    location.href="excelController/exploreExcel";
+                });
+                /*导出CSV*/
+                $("#exportCSV").click(function () {
+                    location.href="excelController/exploreCsv";
+                });
+            }
+        };
+        app.init();
+    })
+</script>
+</html>

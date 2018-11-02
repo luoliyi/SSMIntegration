@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!--配置文件-->
+    <!--<properties resource="dbconfig.properties"></properties>-->
+    <!--设置-->
+    <settings>
+        <!--设置是否允许缓存-->
+        <setting name="cacheEnabled" value="true"/>
+        <!--设置是否允许输出日志-->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+    <!--别名-->
+<!--    <typeAliases>
+        &lt;!&ndash;第一种定义别名的方式&ndash;&gt;
+        &lt;!&ndash;<typeAlias type="mybatis.Entity.Book" alias="Book"></typeAlias>&ndash;&gt;
+        &lt;!&ndash;指定包名下所有的类被自动扫描并定义默认别名，路径只给到包名就行
+mybatis会自动扫描包中的pojo类，自动定义别名，别名就是类名(首字母大写或小写都可以)&ndash;&gt;
+        <package name="com.nf.luoliyi.entities"></package>
+    </typeAliases>
+    &lt;!&ndash;类型处理器&ndash;&gt;
+    &lt;!&ndash;    <typeHandlers>
+            <typeHandler handler="" javaType="" jdbcType=""></typeHandler>
+        </typeHandlers>&ndash;&gt;
+    &lt;!&ndash;开发环境&ndash;&gt;
+    <environments default="development">
+        &lt;!&ndash;开发环境一&ndash;&gt;
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${mysql.driver}"/>
+                <property name="url" value="${mysql.url}"/>
+                <property name="username" value="${mysql.username}"/>
+                <property name="password" value="${mysql.password}"/>
+
+                &lt;!&ndash;连接池数量增大&ndash;&gt;
+                <property name="poolMaximumActiveConnections" value="30" />
+                <property name="poolMaximumIdleConnections" value="30" />
+            </dataSource>
+        </environment>
+
+        &lt;!&ndash;开发环境二&ndash;&gt;
+        <environment id="work">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="${mysql.driver}"/>
+                <property name="url" value="${mysql.url}"/>
+                <property name="username" value="${mysql.username}"/>
+                <property name="password" value="${mysql.password}"/>
+            </dataSource>
+        </environment>
+
+    </environments>
+    <mappers>
+        &lt;!&ndash;映射&ndash;&gt;
+        <mapper resource="mappers/GoodsMapper.xml"></mapper>
+    </mappers>-->
+</configuration>
